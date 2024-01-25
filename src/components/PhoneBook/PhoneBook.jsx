@@ -1,12 +1,6 @@
 import { nanoid } from 'nanoid';
 import React, { Component } from 'react';
 
-// const INITIAL_STATE = {
-//   contacts: [],
-//   name: '',
-//   number: '',
-// };
-
 export default class PhoneBook extends Component {
   state = {
     contacts: [],
@@ -16,13 +10,11 @@ export default class PhoneBook extends Component {
   };
 
   handleChange = e => {
-    console.log(e.target.name);
     this.setState({ [e.target.name]: e.target.value });
   };
 
   handleSubmit = e => {
     e.preventDefault();
-    // console.log(e.currentTarget.value);
     this.reset();
   };
 
@@ -30,27 +22,62 @@ export default class PhoneBook extends Component {
     this.setState({ name: '', number: '' });
   };
 
-  addContact = () => {
-    const { name, number } = this.state;
+  addContact = e => {
+    const { name, number, contacts } = this.state;
 
     if (name === '' || number === '') {
       alert('The name or number field is empty');
       return;
     }
+    const checkContact = contacts.find(
+      contact => contact.name === name && contact.number === number
+    );
+    if (checkContact) {
+      alert('Такой контакт уже существует');
+      return;
+    }
     const id = nanoid();
     const item = { id, name, number };
-    // console.log(item);
     this.setState(prevState => ({ contacts: [item, ...prevState.contacts] }));
-    // console.log(this.state.name);
-    // console.log(this.state.contacts);
+  };
+
+  deleetContact = id => {
+    this.setState(prevState => ({
+      contacts: prevState.contacts.filter(contact => contact.id !== id),
+    }));
+    this.setState({ filter: '' });
+  };
+
+  filterChange = e => {
+    this.setState({ filter: e.target.value });
+  };
+
+  findContact = () => {
+    const { contacts, filter } = this.state;
+    const normalizedFilter = filter.toLowerCase();
+    return contacts.filter(({ name }) =>
+      name.toLowerCase().includes(normalizedFilter)
+    );
   };
 
   render() {
-    const { handleChange, handleSubmit, addContact } = this;
-    const { name, contacts, number } = this.state;
-    const listContact = contacts.map(({ id, name, number }) => (
+    const filteredContacts = this.findContact();
+
+    const {
+      handleChange,
+      handleSubmit,
+      addContact,
+      filterChange,
+      deleetContact,
+    } = this;
+    const { name, number, filter } = this.state;
+
+    const listContact = filteredContacts.map(({ id, name, number }) => (
       <li key={id}>
         {name}: {number}
+        <button type="button" id={id} onClick={() => deleetContact(id)}>
+          Deleet
+        </button>
       </li>
     ));
     return (
@@ -88,10 +115,18 @@ export default class PhoneBook extends Component {
             </button>
           </form>
         </div>
+        <div>
+          <h2>Search</h2>
+          <input
+            type="text"
+            name="filter"
+            value={filter}
+            onChange={filterChange}
+          />
+        </div>
 
         <div>
           <h2>Contacts</h2>
-
           <ul>{listContact}</ul>
         </div>
       </div>
